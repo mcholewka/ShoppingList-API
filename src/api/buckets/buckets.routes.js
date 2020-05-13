@@ -59,7 +59,8 @@ router.post('/:id/products', veryfy, getBucket, async (req,res) => {
     const newProduct = new product.model({
         productName: req.body.productName,
         quantity: req.body.quantity,
-        description: req.body.description
+        description: req.body.description,
+        isBought: req.body.isBought
     });
     const bucketParent = res.bucket;
     
@@ -70,7 +71,20 @@ router.post('/:id/products', veryfy, getBucket, async (req,res) => {
     } catch(err) {
         res.status(500).send({message: err.message});
     }
-})
+});
+
+
+router.patch('/:id/products/:productId', veryfy, getProduct, async (req, res) => {
+    res.product.isBought = req.body.isBought;
+    try {
+
+        const updateProduct = await res.bucket.save();
+        console.log('lecimy');
+        res.json(updateProduct);
+    } catch(err) {
+        res.status(500).json({message: err.message});
+    }
+});
 
 router.get('/:id/products', veryfy, getBucket, async (req, res) => {
     res.json(res.bucket.products);
@@ -94,6 +108,17 @@ async function getBucket(req, res, next) {
     next();
 }
 
-
+async function getProduct(req, res, next) {
+    try {
+        oneBucket = await bucket.findById(req.params.id);
+        oneProduct = oneBucket.products.id(req.params.productId);
+        
+    } catch(err) {
+        return res.status(500).json({message: err.message});
+    }
+    res.product = oneProduct;
+    res.bucket = oneBucket;
+    next();
+}
 
 module.exports = router;

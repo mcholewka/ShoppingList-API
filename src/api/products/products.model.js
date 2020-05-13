@@ -11,8 +11,12 @@ const productSchema = new mongoose.Schema({
     },
     description: {
         type: String
+    },
+    isBought: {
+        type: Boolean
     }
-})
 
+})
+//module.exports = mongoose.model('product', productSchema);
 module.exports.model = mongoose.model('product', productSchema);
 module.exports.schema = productSchema
