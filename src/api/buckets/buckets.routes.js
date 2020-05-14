@@ -5,7 +5,9 @@ const product = require('../products/products.model');
 const user = require('../users/users.model')
 const veryfy = require('../../config/verifyToken');
 const jwt_decode = require('jwt-decode')
+var middlewear = require('../../util/middlewares');
 
+//Create new baskets
 router.post('/', veryfy, async (req, res) => {
     
     try {
@@ -28,7 +30,7 @@ router.post('/', veryfy, async (req, res) => {
         res.status(400).json({message: err.message});
     }
 });
-
+//Get list of all baskets
 router.get('/',veryfy, async (req, res) => {
     try {
         const currentLUserId = (jwt_decode(req.header('auth-token')))._id;
@@ -38,13 +40,15 @@ router.get('/',veryfy, async (req, res) => {
     } catch(err) {
         res.status(400).json({message: err.message});
     }
-})
+});
 
-router.get('/:id', veryfy, getBucket, (req, res) => {
+//Get one basket by id
+router.get('/:id', veryfy, middlewear.getBucket, (req, res) => {
     res.json(res.bucket);
 });
 
-router.delete('/:id', veryfy, getBucket, async (req, res) => {
+//Delete one basket by id
+router.delete('/:id', veryfy, middlewear.getBucket, async (req, res) => {
     try {
         await res.bucket.remove();
         res.json({message: 'Bucket has been deleted'});
@@ -53,8 +57,8 @@ router.delete('/:id', veryfy, getBucket, async (req, res) => {
     }
 })
 
-//Product
-router.post('/:id/products', veryfy, getBucket, async (req,res) => {
+//Get list of product from one basket by its id
+router.post('/:id/products', veryfy, middlewear.getBucket, async (req,res) => {
     
     const newProduct = new product.model({
         productName: req.body.productName,
@@ -73,8 +77,8 @@ router.post('/:id/products', veryfy, getBucket, async (req,res) => {
     }
 });
 
-
-router.patch('/:id/products/:productId', veryfy, getProduct, async (req, res) => {
+//Update product isBought property by basket id (:id) and product id (:productId)
+router.patch('/:id/products/:productId', veryfy, middlewear.getProduct, async (req, res) => {
     res.product.isBought = req.body.isBought;
     try {
 
@@ -86,39 +90,10 @@ router.patch('/:id/products/:productId', veryfy, getProduct, async (req, res) =>
     }
 });
 
-router.get('/:id/products', veryfy, getBucket, async (req, res) => {
+//Get list of products from one bucket by its id
+router.get('/:id/products', veryfy, middlewear.getBucket, async (req, res) => {
     res.json(res.bucket.products);
 
 })
-
-
-//Middlewear
-async function getBucket(req, res, next) {
-    try {
-        oneBucket = await bucket.findById(req.params.id);
-        if(oneBucket == null) {
-            return res.status(400).json({message: "Cannot find that shopping bucket"});
-
-        }
-    } catch(err) {
-        return res.status(500).json({message: err.message});
-    }
-
-    res.bucket = oneBucket;
-    next();
-}
-
-async function getProduct(req, res, next) {
-    try {
-        oneBucket = await bucket.findById(req.params.id);
-        oneProduct = oneBucket.products.id(req.params.productId);
-        
-    } catch(err) {
-        return res.status(500).json({message: err.message});
-    }
-    res.product = oneProduct;
-    res.bucket = oneBucket;
-    next();
-}
 
 module.exports = router;

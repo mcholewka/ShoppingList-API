@@ -4,6 +4,7 @@ const User = require('./users.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+//Register user
 router.post('/register', async (req, res) => {
 
     const checkEmail = await User.findOne({email: req.body.email});
@@ -26,7 +27,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
-
+//Login user, add auth-token to header
 router.post('/login', async (req, res) => {
     
     const user = await User.findOne({email: req.body.email});
@@ -41,7 +42,16 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({_id: user._id, email: user.email}, process.env.TOKEN);
     res.header('auth-token', token).send({token: token});
 
-   // res.send('Successfully logged in');
+})
+
+//Add new basket to the user and add user _id to basket
+router.post('/basket/:basketId', async (req, res) => {
+    const user = await User.findOne({email: req.body.email});
+    if(!user) return res.status(400).send({message:'That user does not exists'});
+
+    user.buckets.push({_id: req.params.basketId});
+    await user.save();
+    return res.status(200).send('User has been added succesfully!');
 })
 
 module.exports = router;

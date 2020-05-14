@@ -11,7 +11,7 @@ mongoose.connect(process.env.CONNECTION_STRING, {useNewUrlParser: true, useUnifi
 })
 
 
-
+var middlewear = require('./src/util/middlewares');
 const user = require('./src/api/users/users.routes');
 const bucket = require('./src/api/buckets/buckets.routes');
 const product = require('./src/api/products/products.routes');

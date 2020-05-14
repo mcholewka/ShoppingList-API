@@ -13,7 +13,8 @@ const productSchema = new mongoose.Schema({
         type: String
     },
     isBought: {
-        type: Boolean
+        type: Boolean,
+        default: false
     }
 
 })
