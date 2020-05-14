@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('./users.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+var middlewear = require('../../util/middlewares');
 
 //Register user
 router.post('/register', async (req, res) => {
@@ -45,12 +46,19 @@ router.post('/login', async (req, res) => {
 })
 
 //Add new basket to the user and add user _id to basket
-router.post('/basket/:basketId', async (req, res) => {
+router.post('/basket/:id', middlewear.getBucket ,async (req, res) => {
     const user = await User.findOne({email: req.body.email});
     if(!user) return res.status(400).send({message:'That user does not exists'});
 
-    user.buckets.push({_id: req.params.basketId});
+    const userWithoutBasket = await User.find({email: req.body.email, buckets: [req.params.id]});
+    if(userWithoutBasket) return res.status(400).send({message:'This user is already in this basket'});
+
+    user.buckets.push({_id: req.params.id});
     await user.save();
+
+    const bucketParent = res.bucket;
+    bucketParent.users.push({_id: user._id});
+    bucketParent.save();
     return res.status(200).send('User has been added succesfully!');
 })
 
