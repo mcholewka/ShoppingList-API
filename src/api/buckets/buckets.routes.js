@@ -97,4 +97,16 @@ router.get('/:id/products', veryfy, middlewear.getBucket, async (req, res) => {
 
 })
 
+//Delete one baket
+
+router.delete('/:id', async (req, res) => {
+    try {
+        await bucket.findByIdAndDelete(req.params.id);
+    } catch(err) {
+        res.status(400).send({message: err.message});
+    }
+    return res.status(200).send({message: 'Successfuly deleted a basket!'});
+
+});
+
 module.exports = router;
