@@ -30,12 +30,13 @@ router.post('/', veryfy, async (req, res) => {
         res.status(400).json({message: err.message});
     }
 });
+
 //Get list of all baskets
 router.get('/',veryfy, async (req, res) => {
     try {
         const currentLUserId = (jwt_decode(req.header('auth-token')))._id;
 
-        const buckets = await bucket.find({users: [currentLUserId]});
+        const buckets = await bucket.find({users: currentLUserId});
         res.json({buckets: buckets});        
     } catch(err) {
         res.status(400).json({message: err.message});
