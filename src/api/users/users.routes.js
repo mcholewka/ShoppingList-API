@@ -4,13 +4,13 @@ const User = require('./users.model');
 const Basket = require('../buckets/buckets.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const veryfy = require('../../config/verifyToken');
 var middlewear = require('../../util/middlewares');
 
 //Register user
 router.post('/register', async (req, res) => {
 
     const checkEmail = await User.findOne({email: req.body.email});
-    console.log(checkEmail);
     if(checkEmail) return res.status(400).send('Email already taken');
 
     const salt = await bcrypt.genSalt(10);
@@ -33,7 +33,6 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
     
     const user = await User.findOne({email: req.body.email});
-    console.log(user);
     if(!user) return res.status(400).send({message:'Email does not exists'});
     
 
@@ -41,17 +40,16 @@ router.post('/login', async (req, res) => {
     if(!validPass) return res.status(400).send({message:'Invalid password!'});
 
     //JWT
-    const token = jwt.sign({_id: user._id, email: user.email}, process.env.TOKEN);
+    const token = jwt.sign({_id: user._id, email: user.email, displayName: user.displayName}, process.env.TOKEN);
     res.header('auth-token', token).send({token: token});
 });
 
 //Add new basket to the user and add user _id to basket
-router.post('/basket/:id', middlewear.getBucket ,async (req, res) => {
+router.post('/basket/:id', veryfy, middlewear.getBucket ,async (req, res) => {
     const user = await User.findOne({email: req.body.email});
     if(!user) return res.status(400).send({message:'That user does not exists'});
     
     const userWithoutBasket = await User.findOne({ email: req.body.email, buckets: {"$in": [req.params.id]}});
-    console.log(userWithoutBasket);
     if(userWithoutBasket!=null) return res.status(400).send({message:'This user is already in this basket'});
 
     user.buckets.push({_id: req.params.id});
@@ -65,7 +63,7 @@ router.post('/basket/:id', middlewear.getBucket ,async (req, res) => {
 
 //Get all users that belongs to one basket by basket id:
 
-router.get('/basket/:id/userlist', async (req,res) => {
+router.get('/basket/:id/userlist', veryfy, async (req,res) => {
     const getBasket = await Basket.findById(req.params.id);
 
     await getBasket.populate('users').execPopulate();
@@ -77,7 +75,7 @@ router.get('/basket/:id/userlist', async (req,res) => {
 
 //Delete user from basket
 
-router.delete('/:userId/basket/:basketId', async (req, res) => {
+router.delete('/:userId/basket/:basketId', veryfy, async (req, res) => {
 
     try {
         const basket = await Basket.updateOne({_id: req.params.basketId}, { $pullAll: {users: [req.params.userId] }});

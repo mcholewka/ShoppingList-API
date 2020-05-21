@@ -84,11 +84,34 @@ router.patch('/:id/products/:productId', veryfy, middlewear.getProduct, async (r
     try {
 
         const updateProduct = await res.bucket.save();
-        console.log('lecimy');
-        res.json(updateProduct);
+        const getBasket = await bucket.findById(req.params.id);
+
+        var count = true;
+        (getBasket.products).forEach(element => {
+            if(element.isBought==false) {
+                count = false
+            }
+        });
+        if(count==true) {
+            res.status(200).json(updateProduct);
+        } else res.status(210).json(updateProduct);
+
+        //res.json(updateProduct);
+    
     } catch(err) {
         res.status(500).json({message: err.message});
     }
+});
+
+router.delete('/:id/products/:productId', veryfy, middlewear.getProduct, async (req, res) => {
+    var product = res.product;
+    //console.log(product);
+    try{
+        await bucket.updateOne({_id: req.params.id}, {$pullAll: {products:[product]}});
+    } catch(err) {
+        console.log(err.message);
+    }
+    
 });
 
 //Get list of products from one bucket by its id
@@ -97,9 +120,9 @@ router.get('/:id/products', veryfy, middlewear.getBucket, async (req, res) => {
 
 })
 
-//Delete one baket
+//Delete one basket
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', veryfy, async (req, res) => {
     try {
         await bucket.findByIdAndDelete(req.params.id);
     } catch(err) {
